@@ -258,16 +258,6 @@ class SeeBalancesScreen extends StatelessWidget {
                       ),
                     );
                   }).toList(),
-                const SizedBox(height: 12),
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16.0),
-                  child: Text(
-                    'This is the simplest way to settle all debts.',
-                    style: TextStyle(color: Colors.grey, fontSize: 12),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-
                 const SizedBox(height: 24),
                 const Divider(thickness: 1),
                 const SizedBox(height: 16),
