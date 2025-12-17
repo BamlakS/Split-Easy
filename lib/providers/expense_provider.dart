@@ -21,10 +21,6 @@ class ExpenseProvider with ChangeNotifier {
     });
   }
 
-  ExpenseProvider() {
-    _fetchRoommates();
-  }
-
   double get totalSpending {
     return _expenses.fold(0.0, (sum, item) => sum + item.amount);
   }
