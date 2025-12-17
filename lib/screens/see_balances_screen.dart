@@ -58,11 +58,11 @@ class SeeBalancesScreen extends StatelessWidget {
                 if (balance > 0.01) {
                   icon = Icons.arrow_downward;
                   color = Colors.green;
-                  text = 'Is owed S${balance.toStringAsFixed(2)}';
+                  text = 'Is owed \$${balance.toStringAsFixed(2)}';
                 } else if (balance < -0.01) {
                   icon = Icons.arrow_upward;
                   color = const Color(0xFFE89A49);
-                  text = 'Owes S${(-balance).toStringAsFixed(2)}';
+                  text = 'Owes \$${(-balance).toStringAsFixed(2)}';
                 } else {
                   icon = Icons.check_circle_outline;
                   color = Colors.grey;

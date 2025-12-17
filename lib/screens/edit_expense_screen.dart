@@ -186,7 +186,7 @@ class _EditExpenseScreenState extends State<EditExpenseScreen> {
               ),
               TextFormField(
                 controller: _amountController,
-                decoration: const InputDecoration(labelText: 'Amount', prefixText: 'S'),
+                decoration: const InputDecoration(labelText: 'Amount', prefixText: '\$'),
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 validator: (value) {
                   if (value == null ||
@@ -266,13 +266,13 @@ class _EditExpenseScreenState extends State<EditExpenseScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
                   child: TextFormField(
                     controller: entry.value,
-                    decoration: InputDecoration(labelText: 'S${entry.key} owes'),
+                    decoration: InputDecoration(labelText: '\$${entry.key} owes'),
                     keyboardType: const TextInputType.numberWithOptions(decimal: true),
                   ),
                 );
               }),
               const SizedBox(height: 20),
-              Text('Running Total: S${_splitTotal.toStringAsFixed(2)}', style: const TextStyle(fontSize: 16)),
+              Text('Running Total: \$${_splitTotal.toStringAsFixed(2)}', style: const TextStyle(fontSize: 16)),
               if ((_splitTotal - (double.tryParse(_amountController.text) ?? 0.0)).abs() > 0.01 &&
                   _splitTotal > 0.0)
                 const Text(

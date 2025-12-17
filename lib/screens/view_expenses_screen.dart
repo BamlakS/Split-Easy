@@ -111,7 +111,7 @@ class ViewExpensesScreen extends StatelessWidget {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          'S${expense.amount.toStringAsFixed(2)}',
+                          '\$${expense.amount.toStringAsFixed(2)}',
                           style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -137,7 +137,7 @@ class ViewExpensesScreen extends StatelessWidget {
 
   Widget _buildSplitBetween(Expense expense) {
     final splitDetails = expense.splitAmong.map((split) {
-      return '${split['name']} owes S${(split['owes'] as double).toStringAsFixed(2)}';
+      return '${split['name']} owes \$${(split['owes'] as double).toStringAsFixed(2)}';
     }).join('\n');
 
     return Column(
