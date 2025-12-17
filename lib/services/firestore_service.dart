@@ -3,7 +3,7 @@ import '../models/expense.dart';
 
 class FirestoreService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
-  final String _userId = "demoUser"; 
+  final String _userId = "demoUser";
 
   // Get a stream of expenses
   Stream<List<Expense>> getExpenses() {
@@ -13,9 +13,8 @@ class FirestoreService {
         .collection('expenses')
         .orderBy('createdAt', descending: true)
         .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => Expense.fromFirestore(doc))
-            .toList());
+        .map((snapshot) =>
+            snapshot.docs.map((doc) => Expense.fromFirestore(doc)).toList());
   }
 
   // Add a new expense
@@ -44,6 +43,43 @@ class FirestoreService {
         .doc(_userId)
         .collection('expenses')
         .doc(expenseId)
+        .delete();
+  }
+
+  // Roommate Methods
+  Future<List<String>> getRoommates() async {
+    try {
+      final snapshot = await _db.collection('users').doc(_userId).collection('roommates').get();
+      if (snapshot.docs.isEmpty) {
+        // If no roommates are found, create a default list
+        List<String> defaultRoommates = ["Alex", "Jordan", "Taylor"];
+        for (String roommate in defaultRoommates) {
+          await addRoommate(roommate);
+        }
+        return defaultRoommates;
+      }
+      return snapshot.docs.map((doc) => doc.id).toList();
+    } catch (e) {
+      print("Error fetching roommates: $e");
+      return [];
+    }
+  }
+
+  Future<void> addRoommate(String name) {
+    return _db
+        .collection('users')
+        .doc(_userId)
+        .collection('roommates')
+        .doc(name)
+        .set({});
+  }
+
+  Future<void> deleteRoommate(String name) {
+    return _db
+        .collection('users')
+        .doc(_userId)
+        .collection('roommates')
+        .doc(name)
         .delete();
   }
 }

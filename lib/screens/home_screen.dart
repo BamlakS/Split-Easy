@@ -4,40 +4,12 @@ import '../models/expense.dart';
 import '../providers/expense_provider.dart';
 import '../widgets/roommate_spending_chart.dart';
 import 'add_expense_screen.dart';
+import 'manage_roommates_screen.dart';
 import 'see_balances_screen.dart';
 import 'view_expenses_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
-
-  void _addRoommate(BuildContext context, ExpenseProvider expenseProvider) {
-    final a = TextEditingController();
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Add Roommate'),
-        content: TextField(
-          controller: a,
-          decoration: const InputDecoration(labelText: 'Roommate Name'),
-        ),
-        actions: <Widget>[
-          TextButton(
-            child: const Text('Cancel'),
-            onPressed: () => Navigator.of(ctx).pop(),
-          ),
-          TextButton(
-            child: const Text('Add'),
-            onPressed: () {
-              if (a.text.isNotEmpty) {
-                expenseProvider.addRoommate(a.text);
-                Navigator.of(ctx).pop();
-              }
-            },
-          ),
-        ],
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -57,8 +29,12 @@ class HomeScreen extends StatelessWidget {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.person_add_alt_1, size: 28),
-            onPressed: () => _addRoommate(context, expenseProvider),
+            icon: const Icon(Icons.group_add, size: 28),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (c) => const ManageRoommatesScreen()),
+              );
+            },
           ),
         ],
       ),
