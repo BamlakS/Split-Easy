@@ -1,0 +1,49 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import '../models/expense.dart';
+
+class FirestoreService {
+  final FirebaseFirestore _db = FirebaseFirestore.instance;
+  final String _userId = "demoUser"; 
+
+  // Get a stream of expenses
+  Stream<List<Expense>> getExpenses() {
+    return _db
+        .collection('users')
+        .doc(_userId)
+        .collection('expenses')
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map((snapshot) => snapshot.docs
+            .map((doc) => Expense.fromFirestore(doc))
+            .toList());
+  }
+
+  // Add a new expense
+  Future<void> addExpense(Expense expense) {
+    return _db
+        .collection('users')
+        .doc(_userId)
+        .collection('expenses')
+        .add(expense.toFirestore());
+  }
+
+  // Update an existing expense
+  Future<void> updateExpense(Expense expense) {
+    return _db
+        .collection('users')
+        .doc(_userId)
+        .collection('expenses')
+        .doc(expense.id)
+        .update(expense.toFirestore());
+  }
+
+  // Delete an expense
+  Future<void> deleteExpense(String expenseId) {
+    return _db
+        .collection('users')
+        .doc(_userId)
+        .collection('expenses')
+        .doc(expenseId)
+        .delete();
+  }
+}

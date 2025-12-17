@@ -1,13 +1,15 @@
-
 import 'package:flutter/material.dart';
 import '../models/expense.dart';
+import '../services/firestore_service.dart';
 
 class ExpenseProvider with ChangeNotifier {
-  final List<Expense> _expenses = [];
+  final FirestoreService _firestoreService = FirestoreService();
+  List<Expense> _expenses = [];
   List<String> _roommates = ["Alex", "Jordan", "Taylor"];
   String? _touchedRoommate;
 
   List<Expense> get expenses => _expenses;
+  Stream<List<Expense>> get expensesStream => _firestoreService.getExpenses();
   List<String> get roommates => _roommates;
   String? get touchedRoommate => _touchedRoommate;
 
@@ -15,22 +17,16 @@ class ExpenseProvider with ChangeNotifier {
     return _expenses.fold(0.0, (sum, item) => sum + item.amount);
   }
 
-  void addExpense(Expense expense) {
-    _expenses.add(expense);
-    notifyListeners();
+  Future<void> addExpense(Expense expense) async {
+    await _firestoreService.addExpense(expense);
   }
 
-  void updateExpense(Expense updatedExpense) {
-    final index = _expenses.indexWhere((expense) => expense.id == updatedExpense.id);
-    if (index != -1) {
-      _expenses[index] = updatedExpense;
-      notifyListeners();
-    }
+  Future<void> updateExpense(Expense expense) async {
+    await _firestoreService.updateExpense(expense);
   }
 
-  void deleteExpense(String id) {
-    _expenses.removeWhere((expense) => expense.id == id);
-    notifyListeners();
+  Future<void> deleteExpense(String id) async {
+    await _firestoreService.deleteExpense(id);
   }
 
   void addRoommate(String name) {
@@ -38,6 +34,11 @@ class ExpenseProvider with ChangeNotifier {
       _roommates.add(name);
       notifyListeners();
     }
+  }
+  
+  void setExpenses(List<Expense> expenses) {
+    _expenses = expenses;
+    notifyListeners();
   }
 
   void setTouchedRoommate(String roommate) {

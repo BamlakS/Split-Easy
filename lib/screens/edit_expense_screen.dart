@@ -1,4 +1,4 @@
-
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -23,8 +23,6 @@ class _EditExpenseScreenState extends State<EditExpenseScreen> {
   late DateTime _selectedDate;
   late String _selectedCategory;
   late Map<String, bool> _splitAmong;
-  late Map<String, TextEditingController> _splitAmountControllers;
-  double _splitTotal = 0.0;
 
   final List<String> _categories = ['Groceries', 'Utilities', 'Rent', 'Entertainment', 'Other'];
 
@@ -38,35 +36,7 @@ class _EditExpenseScreenState extends State<EditExpenseScreen> {
     _selectedCategory = widget.expense.category;
 
     final roommates = Provider.of<ExpenseProvider>(context, listen: false).roommates;
-    _splitAmong = {for (var r in roommates) r: false};
-    _splitAmountControllers = {for (var r in roommates) r: TextEditingController()};
-
-    for (var split in widget.expense.splitAmong) {
-      final String name = split['name'];
-      final double owes = split['owes'];
-      _splitAmong[name] = true;
-      _splitAmountControllers[name] = TextEditingController(text: owes.toString());
-    }
-
-    for (var controller in _splitAmountControllers.values) {
-      controller.addListener(_updateSplitTotal);
-    }
-
-    _updateSplitTotal();
-  }
-
-  void _updateSplitTotal() {
-    double total = 0.0;
-    _splitAmountControllers.forEach((key, controller) {
-      if (_splitAmong[key] ?? false) {
-        total += double.tryParse(controller.text) ?? 0.0;
-      }
-    });
-    if (mounted) {
-      setState(() {
-        _splitTotal = total;
-      });
-    }
+    _splitAmong = {for (var r in roommates) r: widget.expense.splitAmong.contains(r)};
   }
 
   void _presentDatePicker() async {
@@ -83,74 +53,15 @@ class _EditExpenseScreenState extends State<EditExpenseScreen> {
     }
   }
 
-  void _splitEqually() {
-    final totalAmount = double.tryParse(_amountController.text);
-    if (totalAmount == null || totalAmount <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please enter a valid total amount before splitting.'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
-    }
-
-    final selectedRoommates = _splitAmong.entries
-        .where((entry) => entry.value)
-        .map((entry) => entry.key)
-        .toList();
-
-    if (selectedRoommates.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please select at least one roommate to split with.'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
-    }
-
-    final int splitCount = selectedRoommates.length;
-    final double amountPerPerson = totalAmount / splitCount;
-    final double roundedAmount = (amountPerPerson * 100).floorToDouble() / 100;
-    double remainder = totalAmount - (roundedAmount * splitCount);
-
-    for (final roommate in selectedRoommates) {
-      double share = roundedAmount;
-      if (remainder > 0.001) {
-        share += 0.01;
-        remainder -= 0.01;
-      }
-      _splitAmountControllers[roommate]!.text = share.toStringAsFixed(2);
-    }
-    _updateSplitTotal();
-  }
-
-  void _selectAll() {
-    setState(() {
-      _splitAmong.keys.forEach((roommate) {
-        _splitAmong[roommate] = true;
-      });
-    });
-  }
-
-  void _clearAll() {
-    setState(() {
-      _splitAmong.keys.forEach((roommate) {
-        _splitAmong[roommate] = false;
-        _splitAmountControllers[roommate]!.clear();
-      });
-      _updateSplitTotal();
-    });
-  }
-
   void _saveExpense() {
     if (_formKey.currentState!.validate()) {
       final totalAmount = double.tryParse(_amountController.text) ?? 0.0;
-      if ((_splitTotal - totalAmount).abs() > 0.01) {
+      final selectedRoommates = _splitAmong.entries.where((e) => e.value).map((e) => e.key).toList();
+
+      if (selectedRoommates.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Split amounts must equal the total expense amount.'),
+            content: Text('Please select at least one roommate to split with.'),
             backgroundColor: Colors.red,
           ),
         );
@@ -163,14 +74,8 @@ class _EditExpenseScreenState extends State<EditExpenseScreen> {
         paidBy: _paidBy,
         date: _selectedDate,
         category: _selectedCategory,
-        splitAmong: _splitAmong.entries
-            .where((entry) => entry.value)
-            .map((entry) {
-          return {
-            'name': entry.key,
-            'owes': double.tryParse(_splitAmountControllers[entry.key]!.text) ?? 0.0,
-          };
-        }).toList(),
+        splitAmong: selectedRoommates,
+        createdAt: widget.expense.createdAt, // Preserve original creation timestamp
       );
 
       Provider.of<ExpenseProvider>(context, listen: false).updateExpense(updatedExpense);
@@ -252,8 +157,7 @@ class _EditExpenseScreenState extends State<EditExpenseScreen> {
                     });
                   }
                 },
-                validator: (value) =>
-                    value == null ? 'Please select who paid.' : null,
+                validator: (value) => value == null ? 'Please select who paid.' : null,
               ),
               const SizedBox(height: 20),
               Row(
@@ -278,12 +182,20 @@ class _EditExpenseScreenState extends State<EditExpenseScreen> {
                   Row(
                     children: [
                       TextButton(
-                        onPressed: _selectAll,
-                        child: const Text('Select All', style: TextStyle(fontWeight: FontWeight.bold)),
+                        onPressed: () {
+                          setState(() {
+                            _splitAmong.updateAll((key, value) => true);
+                          });
+                        },
+                        child: const Text('Select All'),
                       ),
                       TextButton(
-                        onPressed: _clearAll,
-                        child: const Text('Clear All', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.red)),
+                        onPressed: () {
+                          setState(() {
+                            _splitAmong.updateAll((key, value) => false);
+                          });
+                        },
+                        child: const Text('Clear All'),
                       ),
                     ],
                   ),
@@ -296,49 +208,15 @@ class _EditExpenseScreenState extends State<EditExpenseScreen> {
                   onChanged: (bool? value) {
                     setState(() {
                       _splitAmong[roommate] = value!;
-                      if (!value) {
-                        _splitAmountControllers[roommate]!.clear();
-                      }
-                      _updateSplitTotal();
                     });
                   },
                 );
-              }),
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8.0),
-                child: ElevatedButton(
-                  onPressed: _splitEqually,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFE89A49),
-                  ),
-                  child: const Text('Split Equally'),
-                ),
-              ),
-              ..._splitAmountControllers.entries
-                  .where((entry) => _splitAmong[entry.key] ?? false)
-                  .map((entry) {
-                return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                  child: TextFormField(
-                    controller: entry.value,
-                    decoration: InputDecoration(labelText: '\$${entry.key} owes'),
-                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                  ),
-                );
-              }),
-              const SizedBox(height: 20),
-              Text('Running Total: \$${_splitTotal.toStringAsFixed(2)}', style: const TextStyle(fontSize: 16)),
-              if ((_splitTotal - (double.tryParse(_amountController.text) ?? 0.0)).abs() > 0.01 &&
-                  _splitTotal > 0.0)
-                const Text(
-                  'Warning: Split amounts do not equal total amount.',
-                  style: TextStyle(color: Colors.red),
-                ),
+              }).toList(),
               const SizedBox(height: 30),
               ElevatedButton(
                 onPressed: _saveExpense,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFA7DBD8),
+                  backgroundColor: Theme.of(context).primaryColor,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
                 child: const Text('Save Changes'),
@@ -354,9 +232,6 @@ class _EditExpenseScreenState extends State<EditExpenseScreen> {
   void dispose() {
     _descriptionController.dispose();
     _amountController.dispose();
-    for (var controller in _splitAmountControllers.values) {
-      controller.dispose();
-    }
     super.dispose();
   }
 }

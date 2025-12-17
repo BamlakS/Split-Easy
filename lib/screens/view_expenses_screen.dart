@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -105,40 +104,7 @@ class _ViewExpensesScreenState extends State<ViewExpensesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final expenseProvider = Provider.of<ExpenseProvider>(context);
-    final allExpenses = expenseProvider.expenses;
-    allExpenses.sort((a, b) => b.date.compareTo(a.date));
-
-    List<Expense> filteredExpenses = allExpenses;
-
-    // Category Filter
-    if (_selectedCategory != 'All Categories') {
-      filteredExpenses = filteredExpenses.where((exp) => exp.category == _selectedCategory).toList();
-    }
-
-    // Date Filter
-    final now = DateTime.now();
-    switch (_selectedDateFilter) {
-      case DateFilter.thisWeek:
-        final startOfWeek = now.subtract(Duration(days: now.weekday - 1));
-        filteredExpenses = filteredExpenses.where((exp) => exp.date.isAfter(startOfWeek)).toList();
-        break;
-      case DateFilter.thisMonth:
-        filteredExpenses =
-            filteredExpenses.where((exp) => exp.date.month == now.month && exp.date.year == now.year).toList();
-        break;
-      case DateFilter.custom:
-        if (_customDateRange != null) {
-          filteredExpenses = filteredExpenses
-              .where((exp) =>
-                  exp.date.isAfter(_customDateRange!.start.subtract(const Duration(days: 1))) &&
-                  exp.date.isBefore(_customDateRange!.end.add(const Duration(days: 1))))
-              .toList();
-        }
-        break;
-      case DateFilter.allTime:
-        break;
-    }
+    final expenseProvider = Provider.of<ExpenseProvider>(context, listen: false);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF0F8F7),
@@ -147,7 +113,6 @@ class _ViewExpensesScreenState extends State<ViewExpensesScreen> {
       ),
       body: Column(
         children: [
-          // Date Filters
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
             child: SingleChildScrollView(
@@ -162,8 +127,6 @@ class _ViewExpensesScreenState extends State<ViewExpensesScreen> {
               ),
             ),
           ),
-
-          // Category Filter
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
             child: DropdownButtonFormField<String>(
@@ -185,104 +148,138 @@ class _ViewExpensesScreenState extends State<ViewExpensesScreen> {
               },
             ),
           ),
-
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-            child: Text(
-              'Showing ${filteredExpenses.length} expenses',
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-          ),
           Expanded(
-            child: filteredExpenses.isEmpty
-                ? const Center(
-                    child: Text(
-                      'No expenses found for this period',
-                      style: TextStyle(fontSize: 18, color: Colors.black54),
-                    ),
-                  )
-                : ListView.builder(
-                    padding: const EdgeInsets.all(8.0),
-                    itemCount: filteredExpenses.length,
-                    itemBuilder: (context, index) {
-                      final expense = filteredExpenses[index];
-                      return Card(
-                        elevation: 4,
-                        margin: const EdgeInsets.symmetric(vertical: 8.0),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(15.0),
+            child: StreamBuilder<List<Expense>>(
+              stream: expenseProvider.expensesStream,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (snapshot.hasError) {
+                  return Center(child: Text("Error: ${snapshot.error}"));
+                }
+
+                List<Expense> filteredExpenses = snapshot.data ?? [];
+
+                if (_selectedCategory != 'All Categories') {
+                  filteredExpenses = filteredExpenses.where((exp) => exp.category == _selectedCategory).toList();
+                }
+
+                final now = DateTime.now();
+                switch (_selectedDateFilter) {
+                  case DateFilter.thisWeek:
+                    final startOfWeek = now.subtract(Duration(days: now.weekday - 1));
+                    filteredExpenses = filteredExpenses.where((exp) => exp.date.isAfter(startOfWeek)).toList();
+                    break;
+                  case DateFilter.thisMonth:
+                    filteredExpenses = filteredExpenses
+                        .where((exp) => exp.date.month == now.month && exp.date.year == now.year)
+                        .toList();
+                    break;
+                  case DateFilter.custom:
+                    if (_customDateRange != null) {
+                      filteredExpenses = filteredExpenses
+                          .where((exp) =>
+                              exp.date.isAfter(_customDateRange!.start.subtract(const Duration(days: 1))) &&
+                              exp.date.isBefore(_customDateRange!.end.add(const Duration(days: 1))))
+                          .toList();
+                    }
+                    break;
+                  case DateFilter.allTime:
+                    break;
+                }
+
+                return filteredExpenses.isEmpty
+                    ? const Center(
+                        child: Text(
+                          'No expenses found for this period',
+                          style: TextStyle(fontSize: 18, color: Colors.black54),
                         ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      )
+                    : ListView.builder(
+                        padding: const EdgeInsets.all(8.0),
+                        itemCount: filteredExpenses.length,
+                        itemBuilder: (context, index) {
+                          final expense = filteredExpenses[index];
+                          return Card(
+                            elevation: 4,
+                            margin: const EdgeInsets.symmetric(vertical: 8.0),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(15.0),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                     children: [
-                                      Icon(_getCategoryIcon(expense.category),
-                                          size: 16, color: Colors.grey[600]),
-                                      const SizedBox(width: 8),
-                                      Text(
-                                        expense.category,
-                                        style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                                      Row(
+                                        children: [
+                                          Icon(_getCategoryIcon(expense.category),
+                                              size: 16, color: Colors.grey[600]),
+                                          const SizedBox(width: 8),
+                                          Text(
+                                            expense.category,
+                                            style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                                          ),
+                                        ],
+                                      ),
+                                      Row(
+                                        children: [
+                                          IconButton(
+                                            icon: const Icon(Icons.edit, color: Color(0xFFA7DBD8)),
+                                            onPressed: () {
+                                              Navigator.of(context).push(
+                                                MaterialPageRoute(
+                                                  builder: (context) => EditExpenseScreen(expense: expense),
+                                                ),
+                                              );
+                                            },
+                                          ),
+                                          IconButton(
+                                            icon: Icon(Icons.delete, color: Colors.red.shade300),
+                                            onPressed: () => _confirmDelete(context, expense.id),
+                                          ),
+                                        ],
                                       ),
                                     ],
                                   ),
-                                  Row(
-                                    children: [
-                                      IconButton(
-                                        icon: const Icon(Icons.edit, color: Color(0xFFA7DBD8)),
-                                        onPressed: () {
-                                          Navigator.of(context).push(
-                                            MaterialPageRoute(
-                                              builder: (context) => EditExpenseScreen(expense: expense),
-                                            ),
-                                          );
-                                        },
-                                      ),
-                                      IconButton(
-                                        icon: Icon(Icons.delete, color: Colors.red.shade300),
-                                        onPressed: () => _confirmDelete(context, expense.id),
-                                      ),
-                                    ],
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    expense.description,
+                                    style: const TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
                                   ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    '\$${expense.amount.toStringAsFixed(2)}',
+                                    style: const TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: Color(0xFFA7DBD8),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text('Paid by: ${expense.paidBy}'),
+                                  const SizedBox(height: 8),
+                                  Text(DateFormat('MMM d, yyyy').format(expense.date)),
+                                  const SizedBox(height: 12),
+                                  const Divider(),
+                                  const SizedBox(height: 12),
+                                  _buildSplitBetween(expense),
                                 ],
                               ),
-                              const SizedBox(height: 8),
-                              Text(
-                                expense.description,
-                                style: const TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                '\$${expense.amount.toStringAsFixed(2)}',
-                                style: const TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  color: Color(0xFFA7DBD8),
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Text('Paid by: ${expense.paidBy}'),
-                              const SizedBox(height: 8),
-                              Text(DateFormat('MMM d, yyyy').format(expense.date)),
-                              const SizedBox(height: 12),
-                              const Divider(),
-                              const SizedBox(height: 12),
-                              _buildSplitBetween(expense),
-                            ],
-                          ),
-                        ),
+                            ),
+                          );
+                        },
                       );
-                    },
-                  ),
+              },
+            ),
           ),
         ],
       ),
@@ -316,8 +313,13 @@ class _ViewExpensesScreenState extends State<ViewExpensesScreen> {
   }
 
   Widget _buildSplitBetween(Expense expense) {
-    final splitDetails = expense.splitAmong.map((split) {
-      return '${split['name']} owes \$${(split['owes'] as double).toStringAsFixed(2)}';
+    final splitCount = expense.splitAmong.length;
+    if (splitCount == 0) {
+      return const Text('Not split');
+    }
+    final perPersonAmount = expense.amount / (splitCount > 0 ? splitCount : 1);
+    final splitDetails = expense.splitAmong.map((name) {
+      return '$name owes \$${perPersonAmount.toStringAsFixed(2)}';
     }).join('\n');
 
     return Column(

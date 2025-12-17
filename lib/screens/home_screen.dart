@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-
+import '../models/expense.dart';
 import '../providers/expense_provider.dart';
 import '../widgets/roommate_spending_chart.dart';
 import 'add_expense_screen.dart';
@@ -41,13 +41,12 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final expenseProvider = Provider.of<ExpenseProvider>(context);
-    final totalSpending = expenseProvider.totalSpending;
+    final expenseProvider = Provider.of<ExpenseProvider>(context, listen: false);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF0F8F7), 
+      backgroundColor: const Color(0xFFF0F8F7),
       appBar: AppBar(
-        elevation: 0, 
+        elevation: 0,
         backgroundColor: Colors.transparent,
         title: const Text(
           'SplitEasy',
@@ -58,96 +57,110 @@ class HomeScreen extends StatelessWidget {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.person_add_alt_1, size: 28), 
+            icon: const Icon(Icons.person_add_alt_1, size: 28),
             onPressed: () => _addRoommate(context, expenseProvider),
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Text(
-              'Welcome Back!',
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 10),
-            Text(
-              'Here\'s a summary of your shared expenses.',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Colors.black54),
-            ),
-            const SizedBox(height: 30),
+      body: StreamBuilder<List<Expense>>(
+        stream: expenseProvider.expensesStream,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
 
-            // Spending Chart
-            const Text(
-              'Roommate Spending',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF333333)),
-            ),
-            const SizedBox(height: 16),
-            const Card(
-              elevation: 4,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.all(Radius.circular(20)),
-              ),
-              child: Padding(
-                padding: EdgeInsets.all(16.0),
-                child: RoommateSpendingChart(),
-              ),
-            ),
-            const SizedBox(height: 30),
+          if (snapshot.hasError) {
+            return Center(child: Text("Error: ${snapshot.error}"));
+          }
 
-            // Summary Cards
-            GridView.count(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              crossAxisCount: 2,
-              crossAxisSpacing: 16,
-              mainAxisSpacing: 16,
-              children: [
-                _buildSummaryCard(
-                  context,
-                  title: 'Total Spending',
-                  value: '\$${totalSpending.toStringAsFixed(2)}',
-                  icon: Icons.monetization_on,
-                  color: const Color(0xFFA7DBD8),
-                  onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute(builder: (c) => const ViewExpensesScreen()),
+          final expenses = snapshot.data ?? [];
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            expenseProvider.setExpenses(expenses);
+          });
+
+          return SingleChildScrollView(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text(
+                  'Welcome Back!',
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  'Here\'s a summary of your shared expenses.',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Colors.black54),
+                ),
+                const SizedBox(height: 30),
+                const Text(
+                  'Roommate Spending',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF333333)),
+                ),
+                const SizedBox(height: 16),
+                const Card(
+                  elevation: 4,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(20)),
+                  ),
+                  child: Padding(
+                    padding: EdgeInsets.all(16.0),
+                    child: RoommateSpendingChart(),
                   ),
                 ),
-                _buildSummaryCard(
-                  context,
-                  title: 'Your Balances',
-                  value: 'View Details',
-                  icon: Icons.account_balance_wallet,
-                  color: const Color(0xFFE89A49),
-                  onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute(builder: (c) => const SeeBalancesScreen()),
+                const SizedBox(height: 30),
+                GridView.count(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  crossAxisCount: 2,
+                  crossAxisSpacing: 16,
+                  mainAxisSpacing: 16,
+                  children: [
+                    Consumer<ExpenseProvider>(
+                      builder: (context, provider, child) => _buildSummaryCard(
+                        context,
+                        title: 'Total Spending',
+                        value: '\$${provider.totalSpending.toStringAsFixed(2)}',
+                        icon: Icons.monetization_on,
+                        color: const Color(0xFFA7DBD8),
+                        onTap: () => Navigator.of(context).push(
+                          MaterialPageRoute(builder: (c) => const ViewExpensesScreen()),
+                        ),
+                      ),
+                    ),
+                    _buildSummaryCard(
+                      context,
+                      title: 'Your Balances',
+                      value: 'View Details',
+                      icon: Icons.account_balance_wallet,
+                      color: const Color(0xFFE89A49),
+                      onTap: () => Navigator.of(context).push(
+                        MaterialPageRoute(builder: (c) => const SeeBalancesScreen()),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 30),
+                ElevatedButton.icon(
+                  icon: const Icon(Icons.add, size: 28),
+                  label: const Text('Add New Expense', style: TextStyle(fontSize: 18)),
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(builder: (c) => const AddExpenseScreen()),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color.fromARGB(255, 90, 132, 224),
+                    minimumSize: const Size(double.infinity, 60),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(15),
+                    ),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 30),
-
-            // Action Buttons
-            ElevatedButton.icon(
-              icon: const Icon(Icons.add, size: 28),
-              label: const Text('Add New Expense', style: TextStyle(fontSize: 18)),
-              onPressed: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(builder: (c) => const AddExpenseScreen()),
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color.fromARGB(255, 90, 132, 224),
-                minimumSize: const Size(double.infinity, 60),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(15),
-                ),
-              ),
-            ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }

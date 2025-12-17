@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -28,19 +27,18 @@ class SeeBalancesScreen extends StatelessWidget {
 
     for (var expense in expenses) {
       String payer = expense.paidBy;
-      for (var split in expense.splitAmong) {
-        String borrower = split['name'];
-        double amount = split['owes'] as double;
+      final splitCount = expense.splitAmong.length;
+      if (splitCount == 0) continue;
+      final amountPerPerson = expense.amount / splitCount;
 
+      for (var borrower in expense.splitAmong) {
         if (payer != borrower) {
-          // Track who owes whom
           String key = '$borrower -> $payer';
-          directDebts.update(key, (value) => value + amount, ifAbsent: () => amount);
+          directDebts.update(key, (value) => value + amountPerPerson, ifAbsent: () => amountPerPerson);
         }
       }
     }
 
-    // Simplify debts (e.g., if A owes B and B owes A)
     Map<String, double> simplifiedDebts = {};
     Map<String, double> debtsCopy = Map.from(directDebts);
 
@@ -56,10 +54,10 @@ class SeeBalancesScreen extends StatelessWidget {
           double reverseAmount = debtsCopy[reverseKey]!;
           if (amount > reverseAmount) {
             simplifiedDebts[key] = amount - reverseAmount;
-            simplifiedDebts[reverseKey] = 0; // Mark reverse as handled
+            simplifiedDebts[reverseKey] = 0; 
           } else {
             simplifiedDebts[reverseKey] = reverseAmount - amount;
-            simplifiedDebts[key] = 0; // Mark current as handled
+            simplifiedDebts[key] = 0; 
           }
         } else {
           simplifiedDebts[key] = amount;
@@ -88,15 +86,18 @@ class SeeBalancesScreen extends StatelessWidget {
     final expenses = expenseProvider.expenses;
     final roommates = expenseProvider.roommates;
 
-    // Calculate balances
     Map<String, double> balances = {};
     for (var roommate in roommates) {
       balances[roommate] = 0.0;
     }
     for (var expense in expenses) {
       balances[expense.paidBy] = (balances[expense.paidBy] ?? 0) + expense.amount;
-      for (var split in expense.splitAmong) {
-        balances[split['name']] = (balances[split['name']] ?? 0) - (split['owes'] as double);
+      final splitCount = expense.splitAmong.length;
+      if (splitCount > 0) {
+        final amountPerPerson = expense.amount / splitCount;
+        for (var roommateName in expense.splitAmong) {
+          balances[roommateName] = (balances[roommateName] ?? 0) - amountPerPerson;
+        }
       }
     }
     final sortedBalances = balances.entries.toList()
@@ -104,7 +105,6 @@ class SeeBalancesScreen extends StatelessWidget {
 
     final settlements = _calculateDirectSettlements(expenses, roommates);
 
-    // Calculate spending by category
     Map<String, double> spendingByCategory = {};
     for (var expense in expenses) {
       spendingByCategory.update(expense.category, (value) => value + expense.amount, ifAbsent: () => expense.amount);
@@ -127,7 +127,6 @@ class SeeBalancesScreen extends StatelessWidget {
           : ListView(
               padding: const EdgeInsets.all(8.0),
               children: [
-                // Balances Section
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
                   child: Text(
@@ -206,7 +205,6 @@ class SeeBalancesScreen extends StatelessWidget {
                 const Divider(thickness: 1),
                 const SizedBox(height: 16),
 
-                // Settlement Plan Section
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
                   child: Text(
@@ -274,7 +272,6 @@ class SeeBalancesScreen extends StatelessWidget {
                 const Divider(thickness: 1),
                 const SizedBox(height: 16),
 
-                // Spending by Category Section
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
                   child: Text(
