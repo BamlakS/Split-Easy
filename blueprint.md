@@ -1,56 +1,18 @@
-# SplitEasy Blueprint
+# Split-Easy: A Flutter Expense Splitting App
 
 ## Overview
 
-SplitEasy is a Flutter mobile application designed to simplify expense tracking for roommates. It allows users to add expenses, specify how they are split, and view balances to see who owes whom. The app will be built with a clean, minimalist design and a user-friendly interface.
+Split-Easy is a Flutter application designed to simplify expense tracking and splitting among roommates. It provides a user-friendly interface for managing shared expenses, ensuring fairness and transparency in a shared living environment. The app is built with Flutter and utilizes Firebase for backend services, including Firestore for data storage.
 
-This document outlines the project's architecture, design guidelines, and feature implementation plan.
+## Features
 
-## Style, Design, and Features
+*   **Expense Tracking:** Users can add, edit, and delete expenses, providing details such as amount, description, date, and category.
+*   **Roommate Management:** Users can add and remove roommates.
+*   **Fair Splitting:** The app automatically calculates how much each roommate owes, based on the expenses they've paid and how the expenses are split.
+*   **Real-time Updates:** The app uses a real-time stream of data from Firestore, so all changes are reflected instantly.
 
-### Version 1.0 (Initial Setup)
+## Design
 
-*   **State Management:** Provider for state management, using in-memory lists for local state.
-*   **Data Model:** A simple `Expense` class to represent an expense.
-*   **Design:**
-    *   **Primary Color:** `#A7DBD8` (light teal)
-    *   **Background Color:** `#F0F8F7` (very pale teal)
-    *   **Accent Color:** `#E89A49` (soft orange)
-    *   **Font:** PT Sans
-*   **Home Screen:**
-    *   App title "SplitEasy".
-    *   Navigation buttons: "Add Expense", "View Expenses", "See Balances".
-    *   Minimalist layout with the specified color scheme.
-
-### Version 1.1 (Add Expense)
-
-*   **Add Expense Screen:**
-    *   Form for adding a new expense with fields for description, amount, who paid, date, and how to split the expense.
-    *   Includes validation to ensure the split amounts equal the total expense amount.
-    *   Saves the expense to the in-memory list and displays a success message.
-*   **Split Equally Feature:**
-    *   Adds a "Split Equally" button to the Add Expense screen.
-    *   When clicked, the total expense amount is divided equally among the selected roommates.
-    *   The calculated amounts are auto-filled into the corresponding fields, with any remainder added to the first person's share.
-
-### Version 1.2 (View Expenses)
-
-*   **View Expenses Screen:**
-    *   Displays a list of all expenses, with the most recent first.
-    *   Shows a message if no expenses have been added.
-    *   Each expense is displayed on a card with a light shadow, showing the description, amount, who paid, date, and how the expense is split.
-
-### Version 1.3 (See Balances)
-
-*   **See Balances Screen:**
-    *   Calculates the net balance for each roommate.
-    *   Displays each roommate's balance on a separate card, indicating whether they owe money, are owed money, or are settled up.
-    *   Uses colors and icons to clearly distinguish between a positive, negative, and zero balance.
-
-## Current Plan
-
-### Add "Split Equally" Feature
-
-1.  **Update `add_expense_screen.dart`:** Add the "Split Equally" button to the UI.
-2.  **Implement Logic:** Create the `_splitEqually` function to calculate and distribute the expense amount.
-3.  **Test:** Verify that the feature works as expected.
+*   **Theme:** The app uses a modern, clean design with a consistent color scheme and typography.
+*   **Layout:** The layout is designed to be intuitive and easy to navigate, with a focus on user experience.
+*   **Components:** The app utilizes a variety of Material Design components, including cards, buttons, and icons, to create a visually appealing and interactive experience.

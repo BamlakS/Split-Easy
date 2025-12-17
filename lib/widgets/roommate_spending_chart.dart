@@ -1,7 +1,6 @@
-
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:fl_chart/fl_chart.dart';
 
 import '../providers/expense_provider.dart';
 
@@ -19,7 +18,8 @@ class RoommateSpendingChart extends StatelessWidget {
       spendingByRoommate[roommate] = 0.0;
     }
     for (var expense in expenses) {
-      spendingByRoommate[expense.paidBy] = (spendingByRoommate[expense.paidBy] ?? 0) + expense.amount;
+      spendingByRoommate[expense.paidBy] =
+          (spendingByRoommate[expense.paidBy] ?? 0) + expense.amount;
     }
 
     // Filter out roommates with no spending
@@ -30,7 +30,7 @@ class RoommateSpendingChart extends StatelessWidget {
     if (activeSpendings.isEmpty) {
       return const Center(
         child: Text(
-          "No spending data available.",
+          'No spending data available.',
           style: TextStyle(fontSize: 16, color: Colors.grey),
         ),
       );
@@ -41,43 +41,26 @@ class RoommateSpendingChart extends StatelessWidget {
       child: PieChart(
         PieChartData(
           sections: activeSpendings.entries.map((entry) {
-            final isTouched = entry.key == expenseProvider.touchedRoommate;
-            final double fontSize = isTouched ? 20 : 14;
-            final double radius = isTouched ? 110 : 100;
-            final Color color = isTouched ? Colors.blue.shade300 : _getColorForRoommate(entry.key, roommates);
+            const double fontSize = 14;
+            const double radius = 100;
+            final Color color =
+                _getColorForRoommate(entry.key, roommates);
 
             return PieChartSectionData(
               color: color,
               value: entry.value,
-              title: '\\\$${entry.value.toStringAsFixed(0)}', // Display spending amount
+              title: '\$${entry.value.toStringAsFixed(0)}', // Display spending amount
               radius: radius,
-              titleStyle: TextStyle(
+              titleStyle: const TextStyle(
                 fontSize: fontSize,
                 fontWeight: FontWeight.bold,
-                color: const Color(0xffffffff),
-                shadows: [Shadow(color: Colors.black.withOpacity(0.5), blurRadius: 2)],
+                color: Color(0xffffffff),
+                shadows: [Shadow(color: Colors.black, blurRadius: 2)],
               ),
-              badgeWidget: isTouched ? Text(entry.key, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)) : null,
-              badgePositionPercentageOffset: 0.98,
             );
           }).toList(),
           sectionsSpace: 4,
           centerSpaceRadius: 40,
-          pieTouchData: PieTouchData(
-            touchCallback: (FlTouchEvent event, pieTouchResponse) {
-              if (event is FlTapUpEvent && pieTouchResponse != null && pieTouchResponse.touchedSection != null) {
-                final int touchedIndex = pieTouchResponse.touchedSection!.touchedSectionIndex;
-                if (touchedIndex >= 0 && touchedIndex < activeSpendings.keys.length) {
-                  final String roommate = activeSpendings.keys.elementAt(touchedIndex);
-                  expenseProvider.setTouchedRoommate(roommate);
-                } else {
-                  expenseProvider.clearTouchedRoommate();
-                }
-              } else if (event is FlPanEndEvent) {
-                 expenseProvider.clearTouchedRoommate();
-              }
-            },
-          ),
         ),
       ),
     );
