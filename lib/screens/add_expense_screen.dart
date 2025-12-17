@@ -20,9 +20,12 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
   final _amountController = TextEditingController();
   String? _paidBy;
   DateTime _selectedDate = DateTime.now();
+  String _selectedCategory = 'Other';
   final Map<String, bool> _splitAmong = {};
   final Map<String, TextEditingController> _splitAmountControllers = {};
   double _splitTotal = 0.0;
+
+  final List<String> _categories = ['Groceries', 'Utilities', 'Rent', 'Entertainment', 'Other'];
 
   @override
   void initState() {
@@ -131,6 +134,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
         amount: totalAmount,
         paidBy: _paidBy!,
         date: _selectedDate,
+        category: _selectedCategory,
         splitAmong: _splitAmong.entries
             .where((entry) => entry.value)
             .map((entry) {
@@ -165,6 +169,21 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
           key: _formKey,
           child: ListView(
             children: <Widget>[
+               DropdownButtonFormField<String>(
+                value: _selectedCategory,
+                decoration: const InputDecoration(labelText: 'Category'),
+                items: _categories.map((String category) {
+                  return DropdownMenuItem<String>(
+                    value: category,
+                    child: Text(category),
+                  );
+                }).toList(),
+                onChanged: (newValue) {
+                  setState(() {
+                    _selectedCategory = newValue!;
+                  });
+                },
+              ),
               TextFormField(
                 controller: _descriptionController,
                 decoration: const InputDecoration(labelText: 'Description'),

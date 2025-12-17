@@ -6,6 +6,7 @@ class Expense {
   String paidBy;
   List<Map<String, dynamic>> splitAmong; // [{name: String, owes: double}]
   DateTime date;
+  String category;
 
   Expense({
     required this.id,
@@ -14,6 +15,7 @@ class Expense {
     required this.paidBy,
     required this.splitAmong,
     required this.date,
+    this.category = 'Other',
   });
 
   Expense copyWith({
@@ -23,6 +25,7 @@ class Expense {
     String? paidBy,
     List<Map<String, dynamic>>? splitAmong,
     DateTime? date,
+    String? category,
   }) {
     return Expense(
       id: id ?? this.id,
@@ -31,6 +34,7 @@ class Expense {
       paidBy: paidBy ?? this.paidBy,
       splitAmong: splitAmong ?? this.splitAmong,
       date: date ?? this.date,
+      category: category ?? this.category,
     );
   }
 }

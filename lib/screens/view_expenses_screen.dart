@@ -7,8 +7,23 @@ import '../models/expense.dart';
 import '../providers/expense_provider.dart';
 import './edit_expense_screen.dart';
 
-class ViewExpensesScreen extends StatelessWidget {
+class ViewExpensesScreen extends StatefulWidget {
   const ViewExpensesScreen({super.key});
+
+  @override
+  State<ViewExpensesScreen> createState() => _ViewExpensesScreenState();
+}
+
+class _ViewExpensesScreenState extends State<ViewExpensesScreen> {
+  String _selectedCategory = 'All Categories';
+  final List<String> _categories = [
+    'All Categories',
+    'Groceries',
+    'Utilities',
+    'Rent',
+    'Entertainment',
+    'Other'
+  ];
 
   void _confirmDelete(BuildContext context, String expenseId) {
     showDialog(
@@ -42,45 +57,130 @@ class ViewExpensesScreen extends StatelessWidget {
     );
   }
 
+  IconData _getCategoryIcon(String category) {
+    switch (category) {
+      case 'Groceries':
+        return Icons.shopping_cart;
+      case 'Utilities':
+        return Icons.lightbulb_outline;
+      case 'Rent':
+        return Icons.home;
+      case 'Entertainment':
+        return Icons.movie;
+      default:
+        return Icons.category;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final expenseProvider = Provider.of<ExpenseProvider>(context);
-    final expenses = expenseProvider.expenses;
-    expenses.sort((a, b) => b.date.compareTo(a.date));
+    final allExpenses = expenseProvider.expenses;
+    allExpenses.sort((a, b) => b.date.compareTo(a.date));
+
+    final filteredExpenses = _selectedCategory == 'All Categories'
+        ? allExpenses
+        : allExpenses.where((exp) => exp.category == _selectedCategory).toList();
 
     return Scaffold(
       backgroundColor: const Color(0xFFF0F8F7),
       appBar: AppBar(
         title: const Text('All Expenses'),
       ),
-      body: expenses.isEmpty
-          ? const Center(
-              child: Text(
-                'No expenses yet. Add your first expense!',
-                style: TextStyle(fontSize: 18, color: Colors.black54),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: DropdownButtonFormField<String>(
+              value: _selectedCategory,
+              decoration: const InputDecoration(
+                labelText: 'Filter by Category',
+                border: OutlineInputBorder(),
               ),
-            )
-          : ListView.builder(
-              padding: const EdgeInsets.all(8.0),
-              itemCount: expenses.length,
-              itemBuilder: (context, index) {
-                final expense = expenses[index];
-                return Card(
-                  elevation: 4,
-                  margin: const EdgeInsets.symmetric(vertical: 8.0),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(15.0),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Expanded(
-                              child: Text(
+              items: _categories.map((String category) {
+                return DropdownMenuItem<String>(
+                  value: category,
+                  child: Text(category),
+                );
+              }).toList(),
+              onChanged: (newValue) {
+                setState(() {
+                  _selectedCategory = newValue!;
+                });
+              },
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+            child: Text(
+              'Showing ${filteredExpenses.length} ${_selectedCategory == 'All Categories' ? 'expenses' : _selectedCategory + ' expenses'}',
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+          ),
+          Expanded(
+            child: filteredExpenses.isEmpty
+                ? const Center(
+                    child: Text(
+                      'No expenses in this category.',
+                      style: TextStyle(fontSize: 18, color: Colors.black54),
+                    ),
+                  )
+                : ListView.builder(
+                    padding: const EdgeInsets.all(8.0),
+                    itemCount: filteredExpenses.length,
+                    itemBuilder: (context, index) {
+                      final expense = filteredExpenses[index];
+                      return Card(
+                        elevation: 4,
+                        margin: const EdgeInsets.symmetric(vertical: 8.0),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(15.0),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                   Row(
+                                children: [
+                                  Icon(_getCategoryIcon(expense.category),
+                                      size: 16, color: Colors.grey[600]),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    expense.category,
+                                    style: TextStyle(
+                                        fontSize: 14, color: Colors.grey[600]),
+                                  ),
+                                ],
+                              ),
+                                  Row(
+                                    children: [
+                                      IconButton(
+                                        icon: const Icon(Icons.edit, color: Color(0xFFA7DBD8)),
+                                        onPressed: () {
+                                          Navigator.of(context).push(
+                                            MaterialPageRoute(
+                                              builder: (context) =>
+                                                  EditExpenseScreen(expense: expense),
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                      IconButton(
+                                        icon: Icon(Icons.delete,
+                                            color: Colors.red.shade300),
+                                        onPressed: () =>
+                                            _confirmDelete(context, expense.id),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
                                 expense.description,
                                 style: const TextStyle(
                                   fontSize: 20,
@@ -88,50 +188,32 @@ class ViewExpensesScreen extends StatelessWidget {
                                 ),
                                 overflow: TextOverflow.ellipsis,
                               ),
-                            ),
-                            Row(
-                              children: [
-                                IconButton(
-                                  icon: const Icon(Icons.edit, color: Color(0xFFA7DBD8)),
-                                  onPressed: () {
-                                    Navigator.of(context).push(
-                                      MaterialPageRoute(
-                                        builder: (context) => EditExpenseScreen(expense: expense),
-                                      ),
-                                    );
-                                  },
+                              const SizedBox(height: 8),
+                              Text(
+                                '\$${expense.amount.toStringAsFixed(2)}',
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFFA7DBD8),
                                 ),
-                                IconButton(
-                                  icon: Icon(Icons.delete, color: Colors.red.shade300),
-                                  onPressed: () => _confirmDelete(context, expense.id),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          '\$${expense.amount.toStringAsFixed(2)}',
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFFA7DBD8),
+                              ),
+                              const SizedBox(height: 8),
+                              Text('Paid by: ${expense.paidBy}'),
+                              const SizedBox(height: 8),
+                              Text(DateFormat('MMM d, yyyy').format(expense.date)),
+                              const SizedBox(height: 12),
+                              const Divider(),
+                              const SizedBox(height: 12),
+                              _buildSplitBetween(expense),
+                            ],
                           ),
                         ),
-                        const SizedBox(height: 8),
-                        Text('Paid by: ${expense.paidBy}'),
-                        const SizedBox(height: 8),
-                        Text(DateFormat('MMM d, yyyy').format(expense.date)),
-                        const SizedBox(height: 12),
-                        const Divider(),
-                        const SizedBox(height: 12),
-                        _buildSplitBetween(expense),
-                      ],
-                    ),
+                      );
+                    },
                   ),
-                );
-              },
-            ),
+          ),
+        ],
+      ),
     );
   }
 

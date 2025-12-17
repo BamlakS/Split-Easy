@@ -21,9 +21,12 @@ class _EditExpenseScreenState extends State<EditExpenseScreen> {
   late TextEditingController _amountController;
   late String _paidBy;
   late DateTime _selectedDate;
+  late String _selectedCategory;
   late Map<String, bool> _splitAmong;
   late Map<String, TextEditingController> _splitAmountControllers;
   double _splitTotal = 0.0;
+
+  final List<String> _categories = ['Groceries', 'Utilities', 'Rent', 'Entertainment', 'Other'];
 
   @override
   void initState() {
@@ -32,6 +35,7 @@ class _EditExpenseScreenState extends State<EditExpenseScreen> {
     _amountController = TextEditingController(text: widget.expense.amount.toString());
     _paidBy = widget.expense.paidBy;
     _selectedDate = widget.expense.date;
+    _selectedCategory = widget.expense.category;
 
     final roommates = Provider.of<ExpenseProvider>(context, listen: false).roommates;
     _splitAmong = {for (var r in roommates) r: false};
@@ -140,6 +144,7 @@ class _EditExpenseScreenState extends State<EditExpenseScreen> {
         amount: totalAmount,
         paidBy: _paidBy,
         date: _selectedDate,
+        category: _selectedCategory,
         splitAmong: _splitAmong.entries
             .where((entry) => entry.value)
             .map((entry) {
@@ -174,6 +179,21 @@ class _EditExpenseScreenState extends State<EditExpenseScreen> {
           key: _formKey,
           child: ListView(
             children: <Widget>[
+              DropdownButtonFormField<String>(
+                value: _selectedCategory,
+                decoration: const InputDecoration(labelText: 'Category'),
+                items: _categories.map((String category) {
+                  return DropdownMenuItem<String>(
+                    value: category,
+                    child: Text(category),
+                  );
+                }).toList(),
+                onChanged: (newValue) {
+                  setState(() {
+                    _selectedCategory = newValue!;
+                  });
+                },
+              ),
               TextFormField(
                 controller: _descriptionController,
                 decoration: const InputDecoration(labelText: 'Description'),
@@ -199,7 +219,7 @@ class _EditExpenseScreenState extends State<EditExpenseScreen> {
                 },
               ),
               DropdownButtonFormField<String>(
-                initialValue: _paidBy,
+                value: _paidBy,
                 decoration: const InputDecoration(labelText: 'Who Paid?'),
                 items: roommates.map((String roommate) {
                   return DropdownMenuItem<String>(
