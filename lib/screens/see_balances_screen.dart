@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../models/expense.dart';
 import '../providers/expense_provider.dart';
 
 class SeeBalancesScreen extends StatelessWidget {
@@ -20,6 +21,65 @@ class SeeBalancesScreen extends StatelessWidget {
       default:
         return Icons.category;
     }
+  }
+
+  List<Map<String, dynamic>> _calculateDirectSettlements(List<Expense> expenses, List<String> roommates) {
+    Map<String, double> directDebts = {};
+
+    for (var expense in expenses) {
+      String payer = expense.paidBy;
+      for (var split in expense.splitAmong) {
+        String borrower = split['name'];
+        double amount = split['owes'] as double;
+
+        if (payer != borrower) {
+          // Track who owes whom
+          String key = '$borrower -> $payer';
+          directDebts.update(key, (value) => value + amount, ifAbsent: () => amount);
+        }
+      }
+    }
+
+    // Simplify debts (e.g., if A owes B and B owes A)
+    Map<String, double> simplifiedDebts = {};
+    Map<String, double> debtsCopy = Map.from(directDebts);
+
+    debtsCopy.forEach((key, amount) {
+      if (!simplifiedDebts.containsKey(key)) {
+        List<String> parts = key.split(' -> ');
+        String borrower = parts[0];
+        String lender = parts[1];
+
+        String reverseKey = '$lender -> $borrower';
+
+        if (debtsCopy.containsKey(reverseKey)) {
+          double reverseAmount = debtsCopy[reverseKey]!;
+          if (amount > reverseAmount) {
+            simplifiedDebts[key] = amount - reverseAmount;
+            simplifiedDebts[reverseKey] = 0; // Mark reverse as handled
+          } else {
+            simplifiedDebts[reverseKey] = reverseAmount - amount;
+            simplifiedDebts[key] = 0; // Mark current as handled
+          }
+        } else {
+          simplifiedDebts[key] = amount;
+        }
+      }
+    });
+
+    List<Map<String, dynamic>> settlements = [];
+    simplifiedDebts.forEach((key, amount) {
+      if (amount > 0.01) {
+        List<String> parts = key.split(' -> ');
+        settlements.add({
+          'from': parts[0],
+          'to': parts[1],
+          'amount': amount,
+        });
+      }
+    });
+
+    return settlements;
   }
 
   @override
@@ -41,6 +101,8 @@ class SeeBalancesScreen extends StatelessWidget {
     }
     final sortedBalances = balances.entries.toList()
       ..sort((a, b) => b.value.abs().compareTo(a.value.abs()));
+
+    final settlements = _calculateDirectSettlements(expenses, roommates);
 
     // Calculate spending by category
     Map<String, double> spendingByCategory = {};
@@ -138,6 +200,74 @@ class SeeBalancesScreen extends StatelessWidget {
                       ),
                     );
                   },
+                ),
+
+                const SizedBox(height: 24),
+                const Divider(thickness: 1),
+                const SizedBox(height: 16),
+
+                // Settlement Plan Section
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
+                  child: Text(
+                    'Settlement Plan',
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+                  ),
+                ),
+
+                if (settlements.isEmpty)
+                  const Card(
+                    elevation: 2,
+                    margin: EdgeInsets.symmetric(vertical: 4.0),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(10)),
+                    ),
+                    child: ListTile(
+                      leading: Icon(Icons.check_circle, color: Colors.green, size: 30),
+                      title: Text(
+                        'Everyone is settled up!',
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                      ),
+                    ),
+                  )
+                else
+                  ...settlements.map((settlement) {
+                    return Card(
+                      elevation: 2,
+                      margin: const EdgeInsets.symmetric(vertical: 4.0),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10.0),
+                      ),
+                      child: ListTile(
+                        title: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(settlement['from'], style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                            const SizedBox(width: 8),
+                            const Icon(Icons.arrow_forward, color: Colors.grey, size: 20),
+                            const SizedBox(width: 8),
+                            Text(settlement['to'], style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                          ],
+                        ),
+                        trailing: Text(
+                          '\$${(settlement['amount'] as double).toStringAsFixed(2)}',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                            color: Color(0xFFE89A49),
+                          ),
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                const SizedBox(height: 12),
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16.0),
+                  child: Text(
+                    'This is the simplest way to settle all debts.',
+                    style: TextStyle(color: Colors.grey, fontSize: 12),
+                    textAlign: TextAlign.center,
+                  ),
                 ),
 
                 const SizedBox(height: 24),

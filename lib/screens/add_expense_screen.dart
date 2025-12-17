@@ -96,7 +96,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
 
     // Clear previous values for all controllers before setting new ones
     for (var controller in _splitAmountControllers.values) {
-        controller.clear();
+      controller.clear();
     }
 
     final int splitCount = selectedRoommates.length;
@@ -113,6 +113,24 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
       _splitAmountControllers[roommate]!.text = (shareInCents / 100).toStringAsFixed(2);
     }
     _updateSplitTotal(); // Manually trigger update
+  }
+
+  void _selectAll() {
+    setState(() {
+      _splitAmong.keys.forEach((roommate) {
+        _splitAmong[roommate] = true;
+      });
+    });
+  }
+
+  void _clearAll() {
+    setState(() {
+      _splitAmong.keys.forEach((roommate) {
+        _splitAmong[roommate] = false;
+        _splitAmountControllers[roommate]!.clear();
+      });
+      _updateSplitTotal();
+    });
   }
 
   void _saveExpense() {
@@ -169,7 +187,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
           key: _formKey,
           child: ListView(
             children: <Widget>[
-               DropdownButtonFormField<String>(
+              DropdownButtonFormField<String>(
                 value: _selectedCategory,
                 decoration: const InputDecoration(labelText: 'Category'),
                 items: _categories.map((String category) {
@@ -240,7 +258,24 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                 ],
               ),
               const SizedBox(height: 20),
-              const Text('Split Between:', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('Split Between:', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  Row(
+                    children: [
+                      TextButton(
+                        onPressed: _selectAll,
+                        child: const Text('Select All', style: TextStyle(fontWeight: FontWeight.bold)),
+                      ),
+                      TextButton(
+                        onPressed: _clearAll,
+                        child: const Text('Clear All', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.red)),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
               ...roommates.map((roommate) {
                 return CheckboxListTile(
                   title: Text(roommate),

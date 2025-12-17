@@ -126,6 +126,24 @@ class _EditExpenseScreenState extends State<EditExpenseScreen> {
     _updateSplitTotal();
   }
 
+  void _selectAll() {
+    setState(() {
+      _splitAmong.keys.forEach((roommate) {
+        _splitAmong[roommate] = true;
+      });
+    });
+  }
+
+  void _clearAll() {
+    setState(() {
+      _splitAmong.keys.forEach((roommate) {
+        _splitAmong[roommate] = false;
+        _splitAmountControllers[roommate]!.clear();
+      });
+      _updateSplitTotal();
+    });
+  }
+
   void _saveExpense() {
     if (_formKey.currentState!.validate()) {
       final totalAmount = double.tryParse(_amountController.text) ?? 0.0;
@@ -253,7 +271,24 @@ class _EditExpenseScreenState extends State<EditExpenseScreen> {
                 ],
               ),
               const SizedBox(height: 20),
-              const Text('Split Between:', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('Split Between:', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  Row(
+                    children: [
+                      TextButton(
+                        onPressed: _selectAll,
+                        child: const Text('Select All', style: TextStyle(fontWeight: FontWeight.bold)),
+                      ),
+                      TextButton(
+                        onPressed: _clearAll,
+                        child: const Text('Clear All', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.red)),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
               ...roommates.map((roommate) {
                 return CheckboxListTile(
                   title: Text(roommate),
