@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -103,7 +102,7 @@ class _EditExpenseScreenState extends State<EditExpenseScreen> {
           child: ListView(
             children: <Widget>[
               DropdownButtonFormField<String>(
-                value: _selectedCategory,
+                initialValue: _selectedCategory,
                 decoration: const InputDecoration(labelText: 'Category'),
                 items: _categories.map((String category) {
                   return DropdownMenuItem<String>(
@@ -142,7 +141,7 @@ class _EditExpenseScreenState extends State<EditExpenseScreen> {
                 },
               ),
               DropdownButtonFormField<String>(
-                value: _paidBy,
+                initialValue: _paidBy,
                 decoration: const InputDecoration(labelText: 'Who Paid?'),
                 items: roommates.map((String roommate) {
                   return DropdownMenuItem<String>(
@@ -211,7 +210,7 @@ class _EditExpenseScreenState extends State<EditExpenseScreen> {
                     });
                   },
                 );
-              }).toList(),
+              }),
               const SizedBox(height: 30),
               ElevatedButton(
                 onPressed: _saveExpense,

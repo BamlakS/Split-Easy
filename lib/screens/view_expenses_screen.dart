@@ -130,7 +130,7 @@ class _ViewExpensesScreenState extends State<ViewExpensesScreen> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
             child: DropdownButtonFormField<String>(
-              value: _selectedCategory,
+              initialValue: _selectedCategory,
               decoration: const InputDecoration(
                 labelText: 'Filter by Category',
                 border: OutlineInputBorder(),

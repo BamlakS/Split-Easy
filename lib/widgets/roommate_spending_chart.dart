@@ -1,4 +1,5 @@
 import 'package:fl_chart/fl_chart.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -37,31 +38,39 @@ class RoommateSpendingChart extends StatelessWidget {
     }
 
     return AspectRatio(
-      aspectRatio: 1.7,
-      child: PieChart(
-        PieChartData(
-          sections: activeSpendings.entries.map((entry) {
-            const double fontSize = 14;
-            const double radius = 100;
-            final Color color =
-                _getColorForRoommate(entry.key, roommates);
+      aspectRatio: kIsWeb ? 2.2 : 1.5, // Different aspect ratio for web
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final double radius = kIsWeb
+              ? constraints.maxWidth / 6.5
+              : constraints.maxWidth / 4.0;
+          final double fontSize = radius * 0.15;
+          final double centerSpaceRadius = radius / 2.5;
 
-            return PieChartSectionData(
-              color: color,
-              value: entry.value,
-              title: '\$${entry.value.toStringAsFixed(0)}', // Display spending amount
-              radius: radius,
-              titleStyle: const TextStyle(
-                fontSize: fontSize,
-                fontWeight: FontWeight.bold,
-                color: Color(0xffffffff),
-                shadows: [Shadow(color: Colors.black, blurRadius: 2)],
-              ),
-            );
-          }).toList(),
-          sectionsSpace: 4,
-          centerSpaceRadius: 40,
-        ),
+          return PieChart(
+            PieChartData(
+              sections: activeSpendings.entries.map((entry) {
+                final Color color =
+                    _getColorForRoommate(entry.key, roommates);
+
+                return PieChartSectionData(
+                  color: color,
+                  value: entry.value,
+                  title: '\$${entry.value.toStringAsFixed(0)}', // Display spending amount
+                  radius: radius,
+                  titleStyle: TextStyle(
+                    fontSize: fontSize,
+                    fontWeight: FontWeight.bold,
+                    color: const Color(0xffffffff),
+                    shadows: const [Shadow(color: Colors.black, blurRadius: 2)],
+                  ),
+                );
+              }).toList(),
+              sectionsSpace: 4,
+              centerSpaceRadius: centerSpaceRadius,
+            ),
+          );
+        },
       ),
     );
   }

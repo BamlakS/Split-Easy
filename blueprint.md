@@ -1,18 +1,23 @@
-# Split-Easy: A Flutter Expense Splitting App
+
+# Project Blueprint
 
 ## Overview
 
-Split-Easy is a Flutter application designed to simplify expense tracking and splitting among roommates. It provides a user-friendly interface for managing shared expenses, ensuring fairness and transparency in a shared living environment. The app is built with Flutter and utilizes Firebase for backend services, including Firestore for data storage.
+This document outlines the plan for creating a Flutter application with a focus on a modern, visually appealing design and a flexible theme system. The application will feature a simple UI with a theme toggle to switch between light and dark modes.
 
 ## Features
 
-*   **Expense Tracking:** Users can add, edit, and delete expenses, providing details such as amount, description, date, and category.
-*   **Roommate Management:** Users can add and remove roommates.
-*   **Fair Splitting:** The app automatically calculates how much each roommate owes, based on the expenses they've paid and how the expenses are split.
-*   **Real-time Updates:** The app uses a real-time stream of data from Firestore, so all changes are reflected instantly.
+*   **Theme Management:** The application will use the `provider` package to manage the theme state, allowing users to switch between light and dark themes.
+*   **Custom Fonts:** The `google_fonts` package will be used to incorporate custom fonts for a unique and polished look.
+*   **Material Design 3:** The application will adhere to Material Design 3 principles, using `ColorScheme.fromSeed` to generate harmonious color palettes.
+*   **Component Theming:** The theme will be customized for specific components like `AppBar` and `ElevatedButton` to ensure a consistent look and feel.
 
-## Design
+## Plan
 
-*   **Theme:** The app uses a modern, clean design with a consistent color scheme and typography.
-*   **Layout:** The layout is designed to be intuitive and easy to navigate, with a focus on user experience.
-*   **Components:** The app utilizes a variety of Material Design components, including cards, buttons, and icons, to create a visually appealing and interactive experience.
+1.  **Add Dependencies:** Add the `provider` and `google_fonts` packages to the `pubspec.yaml` file.
+2.  **Create `lib/main.dart`:** Create the main application file with the following components:
+    *   A `ThemeProvider` class to manage the theme state.
+    *   A `MyApp` widget to build the `MaterialApp` with the light and dark themes.
+    *   A `MyHomePage` widget to display the UI with a theme toggle.
+3.  **Fix Android Configuration:** Run the necessary commands to fix the Android configuration issues.
+4.  **Run the Application:** Run the application to ensure that it builds and runs correctly.

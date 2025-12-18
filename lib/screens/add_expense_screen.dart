@@ -101,7 +101,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
           child: ListView(
             children: <Widget>[
               DropdownButtonFormField<String>(
-                value: _selectedCategory,
+                initialValue: _selectedCategory,
                 decoration: const InputDecoration(labelText: 'Category'),
                 items: _categories.map((String category) {
                   return DropdownMenuItem<String>(
@@ -140,7 +140,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                 },
               ),
               DropdownButtonFormField<String>(
-                value: _paidBy,
+                initialValue: _paidBy,
                 decoration: const InputDecoration(labelText: 'Who Paid?'),
                 items: roommates.map((String roommate) {
                   return DropdownMenuItem<String>(
@@ -207,7 +207,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                     });
                   },
                 );
-              }).toList(),
+              }),
               const SizedBox(height: 30),
               ElevatedButton(
                 onPressed: _saveExpense,

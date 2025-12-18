@@ -257,7 +257,7 @@ class SeeBalancesScreen extends StatelessWidget {
                         ),
                       ),
                     );
-                  }).toList(),
+                  }),
                 const SizedBox(height: 24),
                 const Divider(thickness: 1),
                 const SizedBox(height: 16),
@@ -291,7 +291,7 @@ class SeeBalancesScreen extends StatelessWidget {
                       ),
                     ),
                   );
-                }).toList(),
+                }),
               ],
             ),
     );
