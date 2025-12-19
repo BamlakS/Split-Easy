@@ -1,3 +1,4 @@
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -212,7 +213,10 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
               ElevatedButton(
                 onPressed: _saveExpense,
                 style: ElevatedButton.styleFrom(
-                    backgroundColor: Theme.of(context).primaryColor, padding: const EdgeInsets.symmetric(vertical: 16)),
+                  backgroundColor: Colors.lightBlue,
+                  foregroundColor: Colors.black,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                ),
                 child: const Text('Save Expense'),
               ),
             ],
@@ -222,3 +226,6 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     );
   }
 }
+
+
+

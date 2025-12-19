@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/expense.dart';
@@ -96,7 +97,7 @@ class HomeScreen extends StatelessWidget {
                         title: 'Total Spending',
                         value: '\$${provider.totalSpending.toStringAsFixed(2)}',
                         icon: Icons.monetization_on,
-                        color: const Color(0xFFA7DBD8),
+                        color: Colors.lightBlue,
                         onTap: () => Navigator.of(context).push(
                           MaterialPageRoute(builder: (c) => const ViewExpensesScreen()),
                         ),
